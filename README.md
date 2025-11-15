@@ -10,6 +10,7 @@ Goal: Build a cloud-based data foundation using GCP, MongoDB, and Python for eve
 * Protection: Soft Delete enabled
 * Encryption: Google-managed encryption keys
 * Inside the bucket, I create a raw_data folder with this structure:
+
 project5a/
 └── raw_data/
        ├── IP-COUNTRY-REGION-CITY.BIN
