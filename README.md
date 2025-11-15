@@ -64,58 +64,58 @@ https://www.mongodb.com/docs/v8.0/tutorial/install-mongodb-on-ubuntu/
    --dearmor
 ```
 * Create the list file (Ubuntu 22.04(Jammy))
-<pre>
+```text
   echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/8.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-8.0.list
-</pre>
+```
 * Install MongoDB
-<pre>
+```text
 sudo systemctl start mongod
 sudo systemctl enable mongod
-</pre>
+```
 * Start & Enable the Service
-<pre>
+```text
 sudo systemctl start mongod
 sudo systemctl enable mongod
-</pre>
+```
 * Verify MongoDB Installation
-<pre>
+```text
 sudo systemctl status mongod
 mongosh
-</pre>
+```
 ## 6. Initial Data Loading
 * SSH into your VM on GCP and download data from GCS
-<pre>
+```text
     gsutil cp gs://project5a/raw_data/glamira_ubl_oct2019_nov2019.tar.gz ~/
-</pre>
+```
 * Check file exists
-<pre>
+```text
     ls -lh ~/
-</pre>
+```
 * Extract the dataset
-<pre>
+```text
     tar -xvzf glamira_ubl_oct2019_nov2019.tar.gz
-</pre>
+```
 * This will produce something like:
-<pre>
+```text
     ~/glamira_ubl_oct2019_nov2019/dump/countly/
-</pre>
+```
 Inside, you should see .bson and .json
 * Restore the MongoDB dump
 Make sure MongoDB is running:
-<pre>
+```text
     sudo systemctl start mongod
-</pre>
+```
 Run restore:
-<pre>
+```text
     mongorestore --db glamira_db ~/glamira_ubl_oct2019_nov2019/dump/countly
-</pre>
+```
 * Validate import
-<pre>
+```text
     mongosh
-</pre>
+```
 Check DB + collections
-<pre> 
+```text
     use countly
     show collections
-</pre>
+```
 
