@@ -20,8 +20,7 @@ project5a/                           # GCS Bucket Name
 └── raw_data/                        # Folder for raw data storage
     ├── IP-COUNTRY-REGION-CITY.BIN   # IP Geolocation Database (Binary)
     └── glamira_ubl_oct2019_nov2019.tar.gz  # Raw data archive file (October-November 2019)
-
-
+```
 
 ## B. Google Cloud VM Setup
 * Instance name	prj5vm
