@@ -1,7 +1,4 @@
-Duration: 2 weeks
-Goal: Build a cloud-based data foundation using GCP, MongoDB, and Python for event log processing, IP geolocation, and product name mapping.
-
-
+# Project-05-Data-Collection-Storage-Foundation
 # A. Documenting GCS Setup
 * Bucket name: project5a
 * Location: us-east1 (South Carolina)
