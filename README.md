@@ -32,7 +32,6 @@ PROJECT-05-DATA-COLLECTION-STORAGE
 * Protection: Soft Delete enabled
 * Encryption: Google-managed encryption keys
 * Inside the bucket, I create a raw_data folder with this structure:
-
 <pre>
 project5a/                           # GCS Bucket Name
 └── raw_data/                        # Folder for raw data storage
@@ -41,12 +40,11 @@ project5a/                           # GCS Bucket Name
 </pre>
 
 ## 4. Google Cloud VM Setup
-* Instance name	prj5vm
+* Instance name: project5vm
 * Zone:	us-central1-a
-* Machine type: e2-micro (2 vCPUs, 1 GB RAM)
+* Machine type: e2-standard-2 (2 vCPUs, 8 GB Memory)
 * OS Image:	ubuntu-2204-jammy-v20251111
-* Boot disk: 50 GB, Balanced Persistent Disk
-* Additional disk: newdisk – 50 GB, Balanced Persistent Disk
+* Boot disk: 70 GB, Balanced Persistent Disk
 
 ## 5. MongoDB Installation & Configuration
 MongoDB Community Edition 8.0 was installed following the official guide:
