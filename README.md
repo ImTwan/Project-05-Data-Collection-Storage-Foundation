@@ -10,11 +10,9 @@
 PROJECT-05-DATA-COLLECTION-STORAGE
 │
 ├── csv files result/
-│   └── product_filtered_outputs/
-│       ├── part1_main_collections.csv # Retrieve product_id (or viewing_product_id if product_id is missing) and current_url
-│       ├── product_names.csv # Crawl the product name based on the above information; get only one active product name for each distinct product_id
-│       ├── product_view_all_recommend_clicked.csv # Retrieve viewing_product_id and referrer_url
-│       └── ip_location_results.csv # IP Location Processing 
+│       ├── ip_location_results.csv # IP result 
+│       ├── product_ids_to_crawl.csv # Retrieve product_id and url
+│       ├── valid_product_ids.csv # Crawl the product id 
 │
 │
 └── src/
@@ -84,11 +82,12 @@ mongosh
 ## 6. Initial Data Loading
 * SSH into your VM on GCP and download data from GCS
 ```text
-    gsutil cp gs://project5a/raw_data/glamira_ubl_oct2019_nov2019.tar.gz ~/
+    gsutil cp gs://YOUR_BUCKET_NAME/glamira_ubl_oct2019_nov2019.tar.gz .
+    gsutil cp gs://YOUR_BUCKET_NAME/IP-COUNTRY-REGION-CITY.BIN .
 ```
 * Check file exists
 ```text
-    ls -lh ~/
+    ls 
 ```
 * Extract the dataset
 ```text
@@ -106,7 +105,7 @@ Make sure MongoDB is running:
 ```
 Run restore:
 ```text
-    mongorestore --db glamira_db ~/glamira_ubl_oct2019_nov2019/dump/countly
+    mongorestore --db countly --drop ~/glamira_dataset/dump/countly
 ```
 * Validate import
 ```text
