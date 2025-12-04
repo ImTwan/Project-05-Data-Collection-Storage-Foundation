@@ -1,4 +1,4 @@
-# Project-05-Data-Collection-Storage-Foundation
+# Data-Collection-Storage-Foundation
 ## A. SET UP
 ## 1. Local environment requirements:
 * Visual Studio Code editor.
