@@ -1,83 +1,137 @@
 import csv
 import requests
-from bs4 import BeautifulSoup
+import re
+import json
+import random
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 
-INPUT = "D:\python try hard\project5\Project-05-Data-Collection-Storage-Foundation\csv files result\product_ids_to_crawl.csv"
-OUTPUT = "D:\python try hard\project5\Project-05-Data-Collection-Storage-Foundation\csv files result\valid_product_ids.csv"
+INPUT = r"D:\python try hard\unigap\project5\Project-05-Data-Collection-Storage-Foundation\csv files result\product_ids_to_crawl.csv"
+OUTPUT = r"D:\python try hard\unigap\project5\Project-05-Data-Collection-Storage-Foundation\csv files result\product_info.csv"
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-}
+HEADERS_LIST = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 16_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.4 Mobile/15E148 Safari/604.1",
+]
 
-SHOW_EACH_URL = False  # Set to True if you want to print every URL
+FIELDS = [
+    "product_id","name","product_type","sku","price","min_price","max_price",
+    "qty","collection_id","collection","category","category_name","store_code","gender"
+]
 
+MAX_WORKERS = 30          # increase concurrency
+MAX_RETRIES = 5           # more retries for network errors
+SLEEP_BETWEEN_REQUESTS = (0.5, 1.2)
+TLD_LIST = ["fr","com","co.uk","de","ae"]  # extend as needed
+SHOW_EACH_URL = False
 
-def validate_product_id(product_id):
-    # Return True if product page exists and contains an <h1>.
-    url = f"https://www.glamira.fr/catalog/product/view/id/{product_id}"
+def clean_react_data(raw):
+    raw = raw.replace("undefined", "null")
+    raw = re.sub(r"(\w+)\s*:", r'"\1":', raw)
+    raw = re.sub(r":\s*'([^']*)'", r': "\1"', raw)
+    raw = re.sub(r",\s*}", "}", raw)
+    raw = re.sub(r",\s*]", "]", raw)
+    return raw
 
-    if SHOW_EACH_URL:
-        print(f"🔍 Checking: {url}")
+def extract_product_info(product_id):
+    for tld in TLD_LIST:
+        url = f"https://www.glamira.{tld}/catalog/product/view/id/{product_id}"
+        if SHOW_EACH_URL:
+            print(f"🔍 Checking: {url}")
 
-    try:
-        r = requests.get(url, headers=HEADERS, timeout=10)
+        for attempt in range(1, MAX_RETRIES + 1):
+            try:
+                time.sleep(random.uniform(*SLEEP_BETWEEN_REQUESTS))
+                r = requests.get(url, headers={"User-Agent": random.choice(HEADERS_LIST)}, timeout=20)
+                if r.status_code != 200:
+                    continue
 
-        if r.status_code != 200:
-            return (product_id, False)
+                match = re.search(r"var\s+react_data\s*=\s*(\{.*?\});", r.text, re.DOTALL)
+                if not match:
+                    continue
 
-        soup = BeautifulSoup(r.text, "html.parser")
-        h1 = soup.find("h1")
+                raw_json = match.group(1)
+                try:
+                    data = json.loads(raw_json)
+                except json.JSONDecodeError:
+                    data = json.loads(clean_react_data(raw_json))
 
-        return (product_id, bool(h1))
+                # Skip if essential fields are missing
+                if not data.get("product_id") or not data.get("name"):
+                    continue
 
-    except Exception:
-        return (product_id, False)
+                return {
+                    "product_id": product_id,
+                    "name": data.get("name",""),
+                    "product_type": data.get("product_type",""),
+                    "sku": data.get("sku",""),
+                    "price": float(data.get("price") or 0),
+                    "min_price": float(data.get("min_price") or 0),
+                    "max_price": float(data.get("max_price") or 0),
+                    "qty": int(data.get("qty") or 1),
+                    "collection_id": data.get("collection_id",""),
+                    "collection": data.get("collection",""),
+                    "category": data.get("category",""),
+                    "category_name": data.get("category_name",""),
+                    "store_code": data.get("store_code","glgb"),
+                    "gender": data.get("gender","")
+                }
 
+            except Exception:
+                if attempt < MAX_RETRIES:
+                    time.sleep(2 ** attempt)
+                else:
+                    break  # move to next TLD
 
-print("📌 Loading product IDs...")
-rows = []
+    return None  # failed after all TLDs
+
+# Load product IDs
 with open(INPUT, "r", encoding="utf-8") as f:
     rows = list(csv.DictReader(f))
-
 product_ids = [row["product_id"] for row in rows]
 
 print(f"📌 Total product IDs loaded: {len(product_ids):,}")
-print("🚀 Starting validation...\n")
+print("🚀 Starting extraction...")
 
-valid_ids = []
-invalid_ids = []
+detailed_products = []
+failed_ids = []
 
-MAX_WORKERS = 20
-
+# First pass
 with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-    futures = {
-        executor.submit(validate_product_id, pid): pid
-        for pid in product_ids
-    }
-
-    for future in tqdm(as_completed(futures), total=len(futures), desc="Validating"):
-        pid, is_valid = future.result()
-        
-        if is_valid:
-            print(f"✅ VALID: {pid}")
-            valid_ids.append(pid)
+    futures = {executor.submit(extract_product_info, pid): pid for pid in product_ids}
+    for future in tqdm(as_completed(futures), total=len(futures), desc="Extracting"):
+        result = future.result()
+        if result:
+            detailed_products.append(result)
         else:
-            print(f"❌ INVALID: {pid}")
-            invalid_ids.append(pid)
+            failed_ids.append(futures[future])
 
-print("\n🎉 Validation complete!")
-print(f"✔ Valid IDs: {len(valid_ids):,}")
-print(f"✖ Invalid IDs: {len(invalid_ids):,}")
+# Retry failed products until no more succeed
+retry_round = 5
+for r in range(retry_round):
+    if not failed_ids:
+        break
+    print(f"🔄 Retry round {r+1} for {len(failed_ids)} failed products")
+    temp_failed = []
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        futures = {executor.submit(extract_product_info, pid): pid for pid in failed_ids}
+        for future in tqdm(as_completed(futures), total=len(futures), desc=f"Retrying {r+1}"):
+            result = future.result()
+            if result:
+                detailed_products.append(result)
+            else:
+                temp_failed.append(futures[future])
+    failed_ids = temp_failed
 
-print(f"💾 Saving valid IDs to {OUTPUT}...")
+print(f"\n🎉 Extraction complete! Total products extracted: {len(detailed_products):,}")
 
+# Save only fully extracted products
 with open(OUTPUT, "w", newline="", encoding="utf-8") as f:
-    writer = csv.writer(f)
-    writer.writerow(["product_id"])
-    for pid in valid_ids:
-        writer.writerow([pid])
+    writer = csv.DictWriter(f, fieldnames=FIELDS)
+    writer.writeheader()
+    for product in detailed_products:
+        writer.writerow(product)
 
 print("📦 Saved:", OUTPUT)
-print("✅ All done!")
+print("✅ All done! ✅")

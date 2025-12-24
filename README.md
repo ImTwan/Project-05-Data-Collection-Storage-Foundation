@@ -12,7 +12,7 @@ PROJECT-05-DATA-COLLECTION-STORAGE
 ├── csv files result/
 │       ├── ip_location_results.csv # IP result 
 │       ├── product_ids_to_crawl.csv # Retrieve product_id and url
-│       ├── valid_product_ids.csv # Crawl the product id 
+│       ├── product_info.csv # Crawl the product id 
 │
 │
 └── src/
@@ -24,15 +24,15 @@ PROJECT-05-DATA-COLLECTION-STORAGE
 </pre>
 
 ## 3. Documenting GCS Setup
-* Bucket name: project5a
-* Location: us-east1 (South Carolina)
+* Bucket name: twan-glamira
+* Location: us-central1-a
 * Storage class: Standard
 * Public access: Not public
 * Protection: Soft Delete enabled
 * Encryption: Google-managed encryption keys
 * Inside the bucket, I create a raw_data folder with this structure:
 <pre>
-project5a/                           # GCS Bucket Name
+twan-glamira/                           # GCS Bucket Name
 └── raw_data/                        # Folder for raw data storage
     ├── IP-COUNTRY-REGION-CITY.BIN   # IP Geolocation Database (Binary)
     └── glamira_ubl_oct2019_nov2019.tar.gz  # Raw data archive file (October-November 2019)
