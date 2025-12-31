@@ -17,9 +17,9 @@ PROJECT-05-DATA-COLLECTION-STORAGE
 │
 │
 └── src/
-    ├── crawl_data.py # Crawl th data from retrieved data from product name collection
+    ├── crawl_data.py # Crawl the data from the retrieved data from the product name collection
     ├── ip_location.py # IP Location Processing
-    └── retrieve_data.py # Product name collection
+    └── retrieve_data.py # retrieved data from product name collection
 
 
 </pre>
